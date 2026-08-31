@@ -1,0 +1,106 @@
+*{
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    margin:0;
+    height:100vh;
+    background:linear-gradient(
+        135deg,
+        #00a86b,
+        #00c982
+    );
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+
+.container{
+    width:100%;
+    max-width:400px;
+    padding:20px;
+}
+
+
+.logo{
+    text-align:center;
+    color:white;
+    margin-bottom:25px;
+}
+
+
+.logo h1{
+    font-size:45px;
+    letter-spacing:2px;
+}
+
+
+.card{
+    background:white;
+    padding:35px 25px;
+    border-radius:25px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+
+.card h2{
+    font-size:28px;
+    margin-bottom:10px;
+}
+
+
+.card p{
+    color:#777;
+    line-height:1.5;
+    margin-bottom:30px;
+}
+
+
+.google-btn{
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+
+    background:#4285f4;
+    color:white;
+
+    padding:15px;
+    border-radius:12px;
+
+    text-decoration:none;
+    font-size:18px;
+    font-weight:bold;
+
+}
+
+
+.google-btn span{
+
+    background:white;
+    color:#4285f4;
+
+    width:30px;
+    height:30px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+}
+
+
+.footer{
+
+    margin-top:25px;
+    color:#999;
+    font-size:14px;
+
+}

@@ -1,0 +1,1082 @@
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    url_for,
+    session,
+    request,
+)
+
+from dotenv import load_dotenv
+import os
+import jwt
+
+
+# ==========================================
+# LOAD ENVIRONMENT
+# ==========================================
+
+load_dotenv()
+
+
+# ==========================================
+# DATABASE
+# ==========================================
+
+from database import init_db
+
+
+# ==========================================
+# USER MODELS
+# ==========================================
+
+from models import (
+    get_tasks_by_type,
+    get_user,
+    get_user_by_google_id,
+    get_user_by_email,
+    create_user,
+)
+
+
+# ==========================================
+# GOOGLE AUTH
+# ==========================================
+
+from auth.google import (
+    get_google_login_url,
+    exchange_code_for_token,
+)
+
+
+# ==========================================
+# ADMIN
+# ==========================================
+
+from auth.admin_login import (
+    admin_login_bp,
+)
+
+from auth.admin_logout import (
+    admin_logout_bp,
+)
+
+from auth.admin_required import (
+    admin_required,
+)
+
+from deposit.webhook import deposit_webhook_bp
+from deposit.routes import deposit_bp
+
+# ==========================================
+# DAILY CHECK
+# ==========================================
+
+from dailycheck.routes import (
+    daily_check,
+)
+
+
+# ==========================================
+# REFERRAL
+# ==========================================
+
+from referral.models import (
+    create_referral_code,
+)
+
+from referral.routes import (
+    referral_page,
+)
+
+
+# ==========================================
+# UPGRADE
+# ==========================================
+
+from upgrade.models import (
+    get_upgrade_levels,
+)
+
+from upgrade.routes import (
+    upgrade_page,
+    check_upgrade,
+)
+
+
+# ==========================================
+# TASKS
+# ==========================================
+
+from task.routes import (
+    claim_task,
+)
+
+
+# ==========================================
+# VERIFICATION
+# ==========================================
+
+from verification.routes import (
+    verification_page,
+    submit_verification,
+)
+
+from verification.models import (
+    get_user_task_status,
+)
+
+
+# ==========================================
+# CONTRACT
+# ==========================================
+
+from contract.routes import (
+    contract_page,
+    buy_contract,
+)
+
+
+# ==========================================
+# ADMIN USERS
+# ==========================================
+
+from admin.users import (
+    admin_users,
+)
+
+
+# ==========================================
+# ADMIN TASKS
+# ==========================================
+
+from admin.tasks import (
+    admin_tasks,
+    admin_delete_task,
+)
+
+
+# ==========================================
+# ADMIN VERIFICATIONS
+# ==========================================
+
+from admin.verifications import (
+    admin_verifications,
+    approve_verification,
+    reject_verification,
+)
+
+
+# ==========================================
+# DEPOSIT
+# ==========================================
+
+from deposit.routes import (
+    deposit_bp,
+)
+
+from deposit.models import (
+    create_deposit_table,
+)
+
+
+# ==========================================
+# FLASK APP
+# ==========================================
+
+app = Flask(__name__)
+
+
+# ==========================================
+# SECRET KEY
+# ==========================================
+
+app.secret_key = os.getenv(
+    "SECRET_KEY",
+    "change-this-secret-key",
+)
+
+
+# ==========================================
+# DATABASE INITIALIZATION
+# ==========================================
+
+init_db()
+
+create_deposit_table()
+
+
+# ==========================================
+# REGISTER BLUEPRINTS
+# ==========================================
+
+app.register_blueprint(admin_login_bp)
+app.register_blueprint(admin_logout_bp)
+
+app.register_blueprint(
+    deposit_webhook_bp
+)
+
+app.register_blueprint(
+    deposit_bp
+)
+# ==========================================
+# HOME / INDEX
+# ==========================================
+
+@app.route("/")
+def index():
+
+    if "user" in session:
+
+        return redirect(
+            url_for("dashboard")
+        )
+
+    return render_template(
+        "login.html"
+    )
+
+
+# ==========================================
+# GOOGLE LOGIN
+# ==========================================
+
+@app.route("/login")
+def login():
+
+    return redirect(
+        get_google_login_url()
+    )
+
+
+# ==========================================
+# GOOGLE CALLBACK
+# ==========================================
+
+@app.route("/auth/google/callback")
+def google_callback():
+
+    # --------------------------------------
+    # Get authorization code
+    # --------------------------------------
+
+    code = request.args.get(
+        "code"
+    )
+
+    if not code:
+
+        return (
+            "Google login failed.",
+            400,
+        )
+
+
+    # --------------------------------------
+    # Exchange code for token
+    # --------------------------------------
+
+    token = exchange_code_for_token(
+        code
+    )
+
+    if "access_token" not in token:
+
+        return (
+            str(token),
+            400,
+        )
+
+
+    # --------------------------------------
+    # Decode Google ID token
+    # --------------------------------------
+
+    try:
+
+        google_user = jwt.decode(
+            token["id_token"],
+            options={
+                "verify_signature": False,
+            },
+            algorithms=[
+                "RS256",
+            ],
+        )
+
+    except Exception:
+
+        return (
+            "Invalid Google account information.",
+            400,
+        )
+
+
+    # --------------------------------------
+    # Get Google user information
+    # --------------------------------------
+
+    google_id = google_user.get(
+        "sub"
+    )
+
+    email = google_user.get(
+        "email"
+    )
+
+    username = google_user.get(
+        "name"
+    )
+
+    picture = google_user.get(
+        "picture",
+        "",
+    )
+
+
+    if not google_id or not email:
+
+        return (
+            "Google account information is incomplete.",
+            400,
+        )
+
+
+    # --------------------------------------
+    # Default username
+    # --------------------------------------
+
+    if not username:
+
+        username = email.split(
+            "@"
+        )[0]
+
+
+    # --------------------------------------
+    # Find user by Google ID
+    # --------------------------------------
+
+    user = get_user_by_google_id(
+        google_id
+    )
+
+
+    # --------------------------------------
+    # User does not exist by Google ID
+    # --------------------------------------
+
+    if not user:
+
+        # ----------------------------------
+        # Check email
+        # ----------------------------------
+
+        user = get_user_by_email(
+            email
+        )
+
+
+        # ----------------------------------
+        # Create new user
+        # ----------------------------------
+
+        if not user:
+
+            create_user(
+                google_id,
+                username,
+                email,
+                picture,
+            )
+
+            user = get_user_by_google_id(
+                google_id
+            )
+
+
+            # ------------------------------
+            # Create referral code
+            # ------------------------------
+
+            if user:
+
+                create_referral_code(
+                    user["id"]
+                )
+
+
+    # --------------------------------------
+    # User still not found
+    # --------------------------------------
+
+    if not user:
+
+        return (
+            "Unable to create or find your account.",
+            500,
+        )
+
+
+    # --------------------------------------
+    # Save user in session
+    # --------------------------------------
+
+    session["user"] = {
+        "id": user["id"],
+        "username": user["username"],
+        "email": user["email"],
+        "picture": user["picture"],
+        "balance": user["balance"],
+    }
+
+
+    # --------------------------------------
+    # Go to dashboard
+    # --------------------------------------
+
+    return redirect(
+        url_for("dashboard")
+    )
+# ==========================================
+# DASHBOARD
+# ==========================================
+
+@app.route("/dashboard")
+def dashboard():
+
+    # --------------------------------------
+    # Check login
+    # --------------------------------------
+
+    if "user" not in session:
+
+        return redirect(
+            url_for("index")
+        )
+
+
+    # --------------------------------------
+    # Get fresh user data
+    # --------------------------------------
+
+    user = get_user(
+        session["user"]["id"]
+    )
+
+
+    if not user:
+
+        session.clear()
+
+        return redirect(
+            url_for("index")
+        )
+
+
+    # --------------------------------------
+    # Update session
+    # --------------------------------------
+
+    session["user"] = {
+        "id": user["id"],
+        "username": user["username"],
+        "email": user["email"],
+        "picture": user["picture"],
+        "balance": user["balance"],
+    }
+
+
+    # --------------------------------------
+    # Dashboard
+    # --------------------------------------
+
+    return render_template(
+        "dashboard.html",
+        user=session["user"],
+    )
+
+
+# ==========================================
+# EARN
+# ==========================================
+
+@app.route("/earn")
+def earn():
+
+    # --------------------------------------
+    # Check login
+    # --------------------------------------
+
+    if "user" not in session:
+
+        return redirect(
+            url_for("index")
+        )
+
+
+    user_id = session["user"]["id"]
+
+
+    # --------------------------------------
+    # Get task type
+    # --------------------------------------
+
+    task_type = request.args.get(
+        "type",
+        "normal",
+    )
+
+
+    # --------------------------------------
+    # Get upgrade levels
+    # --------------------------------------
+
+    levels = get_upgrade_levels(
+        user_id
+    )
+
+
+    # ======================================
+    # NORMAL TASKS
+    # ======================================
+
+    if task_type == "normal":
+
+        tasks = []
+
+
+        for task in get_tasks_by_type(
+            "normal"
+        ):
+
+            task = dict(task)
+
+
+            # ------------------------------
+            # Verification status
+            # ------------------------------
+
+            task[
+                "verification_status"
+            ] = get_user_task_status(
+                user_id,
+                task["id"],
+            )
+
+
+            tasks.append(
+                task
+            )
+
+
+    # ======================================
+    # UPGRADE TASKS
+    # ======================================
+
+    else:
+
+        tasks = []
+
+
+        for level, quantity in levels.items():
+
+            user_tasks = get_tasks_by_type(
+                "upgrade",
+                level,
+            )
+
+
+            for task in user_tasks:
+
+                task = dict(task)
+
+
+                # --------------------------
+                # Verification status
+                # --------------------------
+
+                task[
+                    "verification_status"
+                ] = get_user_task_status(
+                    user_id,
+                    task["id"],
+                )
+
+
+                # --------------------------
+                # Upgrade reward
+                # --------------------------
+
+                task["reward"] = (
+                    float(task["reward"])
+                    * quantity
+                )
+
+
+                task["quantity"] = quantity
+
+
+                tasks.append(
+                    task
+                )
+
+
+    # --------------------------------------
+    # Earn page
+    # --------------------------------------
+
+    return render_template(
+        "earn.html",
+        tasks=tasks,
+        task_type=task_type,
+        levels=levels,
+    )
+# ==========================================
+# DAILY CHECK
+# ==========================================
+
+@app.route("/daily-check")
+def daily_check_page():
+
+    # --------------------------------------
+    # Check login
+    # --------------------------------------
+
+    if "user" not in session:
+
+        return redirect(
+            url_for("index")
+        )
+
+
+    return daily_check()
+
+
+# ==========================================
+# CLAIM DAILY CHECK
+# ==========================================
+
+@app.route("/daily-check/claim")
+def claim_daily_page():
+
+    # --------------------------------------
+    # Check login
+    # --------------------------------------
+
+    if "user" not in session:
+
+        return redirect(
+            url_for("index")
+        )
+
+
+    # --------------------------------------
+    # Import claim function
+    # --------------------------------------
+
+    from dailycheck.routes import (
+        claim,
+    )
+
+
+    return claim()
+
+
+# ==========================================
+# LOGOUT
+# ==========================================
+
+@app.route("/logout")
+def logout():
+
+    # --------------------------------------
+    # Clear session
+    # --------------------------------------
+
+    session.clear()
+
+
+    # --------------------------------------
+    # Return to login
+    # --------------------------------------
+
+    return redirect(
+        url_for("index")
+    )
+# ==========================================
+# ADMIN DASHBOARD
+# ==========================================
+
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+
+    return render_template(
+        "admin/dashboard.html",
+        admin=session["admin_username"],
+    )
+
+
+# ==========================================
+# ADMIN USERS
+# ==========================================
+
+@app.route("/admin/users")
+@admin_required
+def admin_users_page():
+
+    return admin_users()
+
+
+# ==========================================
+# ADMIN TASKS
+# ==========================================
+
+@app.route(
+    "/admin/tasks",
+    methods=["GET", "POST"],
+)
+@admin_required
+def admin_tasks_page():
+
+    return admin_tasks()
+
+
+# ==========================================
+# ADMIN DELETE TASK
+# ==========================================
+
+@app.route(
+    "/admin/tasks/delete/<int:task_id>"
+)
+@admin_required
+def admin_delete_task_page(
+    task_id,
+):
+
+    return admin_delete_task(
+        task_id
+    )
+
+
+# ==========================================
+# ADMIN VERIFICATIONS
+# ==========================================
+
+@app.route(
+    "/admin/verifications"
+)
+@admin_required
+def admin_verifications_page():
+
+    return admin_verifications()
+
+
+# ==========================================
+# APPROVE VERIFICATION
+# ==========================================
+
+@app.route(
+    "/admin/verifications/approve/<int:verification_id>"
+)
+@admin_required
+def approve_verification_page(
+    verification_id,
+):
+
+    return approve_verification(
+        verification_id
+    )
+
+
+# ==========================================
+# REJECT VERIFICATION
+# ==========================================
+
+@app.route(
+    "/admin/verifications/reject/<int:verification_id>"
+)
+@admin_required
+def reject_verification_page(
+    verification_id,
+):
+
+    return reject_verification(
+        verification_id
+    )
+# ==========================================
+# REFERRAL
+# ==========================================
+
+@app.route("/referral")
+def referral():
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return referral_page()
+
+
+# ==========================================
+# CONTRACT
+# ==========================================
+
+@app.route("/contract")
+def contract():
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return contract_page()
+
+
+# ==========================================
+# BUY CONTRACT
+# ==========================================
+
+@app.route("/contract/buy")
+def contract_buy():
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return buy_contract()
+
+
+# ==========================================
+# UPGRADE
+# ==========================================
+
+@app.route("/upgrade")
+def upgrade():
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return upgrade_page()
+
+
+# ==========================================
+# CHECK UPGRADE
+# ==========================================
+
+@app.route("/upgrade/check")
+def upgrade_check():
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return check_upgrade()
+# ==========================================
+# OPEN TASK
+# ==========================================
+
+@app.route("/task/<int:task_id>")
+def open_task(task_id):
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    from models import get_task
+    from upgrade.models import has_active_contract
+
+    task = get_task(task_id)
+
+    if not task:
+        return (
+            "Task not found.",
+            404,
+        )
+
+    # --------------------------------------
+    # Premium task
+    # --------------------------------------
+
+    if task["task_type"] == "premium":
+
+        if not has_active_contract(
+            session["user"]["id"]
+        ):
+            return redirect(
+                url_for("upgrade")
+            )
+
+    return redirect(
+        task["task_url"]
+    )
+
+
+# ==========================================
+# CLAIM TASK
+# ==========================================
+
+@app.route("/task/claim")
+def task_claim():
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return claim_task()
+
+
+# ==========================================
+# VERIFICATION PAGE
+# ==========================================
+
+@app.route(
+    "/verification/<int:task_id>"
+)
+def verification(task_id):
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return verification_page(
+        task_id
+    )
+
+
+# ==========================================
+# SUBMIT VERIFICATION
+# ==========================================
+
+@app.route(
+    "/verification/<int:task_id>/submit",
+    methods=["POST"],
+)
+def verification_submit(task_id):
+
+    if "user" not in session:
+        return redirect(
+            url_for("index")
+        )
+
+    return submit_verification(
+        task_id
+    )
+# ==========================================
+# FLUTTERWAVE WEBHOOK
+# ==========================================
+
+@app.route(
+    "/flutterwave/webhook",
+    methods=["POST"],
+)
+def flutterwave_webhook():
+
+    from deposit.flutterwave import verify_payment
+    from deposit.models import complete_deposit
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    transaction_id = (
+        data.get("data", {}).get("id")
+        or data.get("id")
+    )
+
+    if not transaction_id:
+        return "OK", 200
+
+    # --------------------------------------
+    # Verify transaction directly with
+    # Flutterwave
+    # --------------------------------------
+
+    result = verify_payment(
+        transaction_id
+    )
+
+    if result.get("status") != "success":
+        return "OK", 200
+
+    payment = result.get(
+        "data",
+        {}
+    )
+
+    if payment.get("status") != "successful":
+        return "OK", 200
+
+    tx_ref = payment.get(
+        "tx_ref"
+    )
+
+    flw_ref = str(
+        payment.get(
+            "id",
+            transaction_id
+        )
+    )
+
+    if not tx_ref:
+        return "OK", 200
+
+    # --------------------------------------
+    # Complete deposit
+    # --------------------------------------
+
+    complete_deposit(
+        tx_ref,
+        flw_ref,
+    )
+
+    return "OK", 200
+
+
+# ==========================================
+# 404 ERROR
+# ==========================================
+
+@app.errorhandler(404)
+def page_not_found(error):
+
+    return (
+        "<h2>404 - Page Not Found</h2>",
+        404,
+    )
+
+
+# ==========================================
+# 500 ERROR
+# ==========================================
+
+@app.errorhandler(500)
+def server_error(error):
+
+    return (
+        "<h2>500 - Internal Server Error</h2>",
+        500,
+    )
+
+
+# ==========================================
+# START APPLICATION
+# ==========================================
+
+if __name__ == "__main__":
+
+    app.run(
+        host="0.0.0.0",
+        port=8000,
+        debug=True,
+    )

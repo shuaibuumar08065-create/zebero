@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Task Verifications</title>
+
+<style>
+
+body{
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+padding:20px;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:#fff;
+}
+
+th{
+background:#0c8b5d;
+color:#fff;
+padding:12px;
+}
+
+td{
+padding:12px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+img{
+width:80px;
+height:80px;
+object-fit:cover;
+border-radius:8px;
+}
+
+.approve{
+background:#16a34a;
+color:#fff;
+padding:8px 14px;
+text-decoration:none;
+border-radius:6px;
+margin-right:5px;
+}
+
+.reject{
+background:#dc2626;
+color:#fff;
+padding:8px 14px;
+text-decoration:none;
+border-radius:6px;
+}
+
+.pending{
+color:#f59e0b;
+font-weight:bold;
+}
+
+.approved{
+color:#16a34a;
+font-weight:bold;
+}
+
+.rejected{
+color:#dc2626;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Task Verifications</h2>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+
+<th>User</th>
+
+<th>Task</th>
+
+<th>Screenshot</th>
+
+<th>Status</th>
+
+<th>Date</th>
+
+<th>Action</th>
+
+</tr>
+
+{% for item in verifications %}
+
+<tr>
+
+<td>{{ item.id }}</td>
+
+<td>{{ item.username }}</td>
+
+<td>{{ item.title }}</td>
+
+<td>
+
+<a
+href="/static/uploads/tasks/{{ item.screenshot }}"
+target="_blank">
+
+<img
+src="/static/uploads/{{ item.screenshot }}">
+
+</a>
+
+</td>
+
+<td>
+
+{% if item.status=="pending" %}
+
+<span class="pending">
+Pending
+</span>
+
+{% elif item.status=="approved" %}
+
+<span class="approved">
+Approved
+</span>
+
+{% else %}
+
+<span class="rejected">
+Rejected
+</span>
+
+{% endif %}
+
+</td>
+
+<td>{{ item.created_at }}</td>
+
+<td>
+
+<a
+class="approve"
+href="/admin/verifications/approve/{{ item.id }}">
+
+Approve
+
+</a>
+
+<a
+class="reject"
+href="/admin/verifications/reject/{{ item.id }}">
+
+Reject
+
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</body>
+
+</html>

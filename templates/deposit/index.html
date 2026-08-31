@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Deposit - ZEBERO</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/deposit.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<main class="deposit-page">
+
+    <div class="deposit-card">
+
+        <!-- Icon -->
+
+        <div class="deposit-icon">
+            💰
+        </div>
+
+
+        <!-- Header -->
+
+        <div class="deposit-header">
+
+            <h1>
+                Wallet Deposit
+            </h1>
+
+            <p>
+                Add money to your ZEBERO wallet
+                securely using bank transfer.
+            </p>
+
+        </div>
+
+
+        <!-- Form -->
+
+        <form
+            class="deposit-form"
+            action="{{ url_for('deposit.deposit_create') }}"
+            method="POST"
+        >
+
+            <div class="form-group">
+
+                <label for="amount">
+                    Deposit Amount
+                </label>
+
+
+                <div class="amount-wrapper">
+
+                    <span class="currency">
+                        ₦
+                    </span>
+
+
+                    <input
+                        class="amount-input"
+                        id="amount"
+                        type="number"
+                        name="amount"
+                        placeholder="1000"
+                        min="1000"
+                        step="1"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="deposit-button"
+                type="submit"
+            >
+
+                Continue
+
+            </button>
+
+
+            <div class="minimum-deposit">
+
+                Minimum deposit is
+                <strong>₦1,000</strong>
+
+            </div>
+
+        </form>
+
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="back-dashboard"
+        >
+
+            ← Back to Dashboard
+
+        </a>
+
+
+        <div class="deposit-security">
+
+            🔒 Your payment is processed securely
+            through Flutterwave.
+
+        </div>
+
+    </div>
+
+</main>
+<script>
+history.pushState(null, "", location.href);
+window.onpopstate = function () {
+    window.location.href = "/dashboard";
+};
+</script>
+
+</body>
+
+</html>

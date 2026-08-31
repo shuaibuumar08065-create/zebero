@@ -1,0 +1,392 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f5f7fb;
+
+    color: #172033;
+}
+
+
+/* =========================================
+   PAGE
+========================================= */
+
+.deposit-page {
+
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 24px;
+
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.deposit-card {
+
+    width: 100%;
+
+    max-width: 520px;
+
+    background: #ffffff;
+
+    border-radius: 24px;
+
+    padding: 32px;
+
+    box-shadow:
+        0 10px 35px
+        rgba(0, 0, 0, 0.07);
+
+}
+
+
+/* =========================================
+   ICON
+========================================= */
+
+.deposit-icon {
+
+    width: 72px;
+
+    height: 72px;
+
+    margin:
+        0 auto 18px;
+
+    border-radius: 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        #e8f8f1;
+
+    font-size: 34px;
+
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.deposit-header {
+
+    text-align: center;
+
+    margin-bottom: 30px;
+
+}
+
+
+.deposit-header h1 {
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+    margin-bottom: 10px;
+
+    color: #172033;
+
+}
+
+
+.deposit-header p {
+
+    color: #687386;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.deposit-form {
+
+    margin-top: 25px;
+
+}
+
+
+.form-group {
+
+    margin-bottom: 20px;
+
+}
+
+
+.form-group label {
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: #30394d;
+
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+.amount-wrapper {
+
+    position: relative;
+
+}
+
+
+.currency {
+
+    position: absolute;
+
+    left: 16px;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+
+    font-weight: 700;
+
+    color: #008f5a;
+
+}
+
+
+.amount-input {
+
+    width: 100%;
+
+    height: 56px;
+
+    border:
+        1px solid #dce1ea;
+
+    border-radius: 14px;
+
+    padding:
+        0 16px 0 48px;
+
+    font-size: 17px;
+
+    outline: none;
+
+    background: #fafbfc;
+
+    color: #172033;
+
+}
+
+
+.amount-input:focus {
+
+    border-color:
+        #009b63;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(0, 155, 99, 0.10);
+
+}
+
+
+/* =========================================
+   BUTTON
+========================================= */
+
+.deposit-button {
+
+    width: 100%;
+
+    height: 56px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #008f5a,
+            #13b978
+        );
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+}
+
+
+.deposit-button:hover {
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+.deposit-button:active {
+
+    transform:
+        translateY(0);
+
+}
+
+
+/* =========================================
+   MINIMUM
+========================================= */
+
+.minimum-deposit {
+
+    margin-top: 12px;
+
+    text-align: center;
+
+    color: #7a8495;
+
+    font-size: 13px;
+
+}
+
+
+.minimum-deposit strong {
+
+    color: #008f5a;
+
+}
+
+
+/* =========================================
+   BACK
+========================================= */
+
+.back-dashboard {
+
+    display: block;
+
+    margin-top: 24px;
+
+    text-align: center;
+
+    text-decoration: none;
+
+    color: #008f5a;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================
+   SECURITY
+========================================= */
+
+.deposit-security {
+
+    margin-top: 25px;
+
+    padding: 15px;
+
+    border-radius: 14px;
+
+    background: #f1faf6;
+
+    color: #667085;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+
+    text-align: center;
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .deposit-page {
+
+        padding: 16px;
+
+        align-items: flex-start;
+
+        padding-top: 40px;
+
+    }
+
+
+    .deposit-card {
+
+        padding:
+            26px 20px;
+
+        border-radius: 22px;
+
+    }
+
+
+    .deposit-header h1 {
+
+        font-size: 24px;
+
+    }
+
+
+    .deposit-header p {
+
+        font-size: 14px;
+
+    }
+
+}

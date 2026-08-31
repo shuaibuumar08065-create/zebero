@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Referral - ZEBERO</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/referral.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <h1><span class="title-icon">👥</span> Referral</h1>
+
+    <!-- WHAT YOU EARN -->
+    <div class="card">
+        <h3>What You Earn</h3>
+
+        <div class="earn-item">
+            <div class="earn-left">
+                <div class="earn-icon">🎁</div>
+                <div>
+                    <strong>Signup Bonus</strong>
+                    <small>Instant reward</small>
+                </div>
+            </div>
+            <span class="earn-amount">₦500</span>
+        </div>
+
+        <div class="earn-item">
+            <div class="earn-left">
+                <div class="earn-icon">💵</div>
+                <div>
+                    <strong>Deposit Comm.</strong>
+                    <small>On every deposit</small>
+                </div>
+            </div>
+            <span class="earn-amount">30%</span>
+        </div>
+
+        <div class="earn-item">
+            <div class="earn-left">
+                <div class="earn-icon">🤝</div>
+                <div>
+                    <strong>You + Friend Both</strong>
+                    <small>Shared reward</small>
+                </div>
+            </div>
+            <span class="earn-amount">₦500</span>
+        </div>
+    </div>
+
+    <!-- YOUR CODE -->
+    <div class="card">
+        <h3>Your Code</h3>
+        <div class="code-box">{{ referral_code }}</div>
+    </div>
+
+    <!-- REFERRALS -->
+    <div class="card">
+        <h3>Referrals</h3>
+        <div class="total-count">{{ total_referrals }}</div>
+    </div>
+
+    <!-- REFERRAL LINK -->
+    <div class="card">
+        <h3>Referral Link</h3>
+        <input id="refLink" type="text" value="{{ referral_link }}" readonly>
+
+        <div class="btn-row">
+            <button class="btn copy-btn" onclick="copyLink()">
+                📋 Copy Link
+            </button>
+            <button class="btn share-btn" onclick="shareLink()">
+                📤 Share Link
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<nav class="bottom-nav">
+    <a href="/dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/>
+        </svg>
+        <span>Home</span>
+    </a>
+    <a href="/earn">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 7H3c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 12H3V9h18v10zm-9-7c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+        </svg>
+        <span>Earn</span>
+    </a>
+    <a href="/referral" class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+        </svg>
+        <span>Referral</span>
+    </a>
+    <a href="/upgrade">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.3 7.2-6.3-4.8-6.3 4.8 2.3-7.2-6-4.8h7.6z"/>
+        </svg>
+        <span>Premium</span>
+    </a>
+</nav>
+
+<script>
+function copyLink(){
+    const input = document.getElementById("refLink");
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(() => {
+        alert("Link copied!");
+    }).catch(() => {
+        document.execCommand("copy");
+        alert("Link copied!");
+    });
+}
+
+function shareLink(){
+    const link = document.getElementById("refLink").value;
+    if (navigator.share) {
+        navigator.share({
+            title: "ZEBERO Referral",
+            text: "Join ZEBERO and earn money!",
+            url: link
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(link);
+        alert("Link copied! Paste it anywhere.");
+    }
+}
+</script>
+<script>
+history.pushState(null, "", location.href);
+window.onpopstate = function () {
+    window.location.href = "/dashboard";
+};
+</script>
+
+</body>
+</html>

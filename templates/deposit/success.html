@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Deposit Successful</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/deposit.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2 style="color:#16a34a;">
+✅ Deposit Successful
+</h2>
+
+<p class="subtitle">
+
+Your payment has been received successfully.
+
+</p>
+
+<div class="note">
+
+<p><b>Reference:</b></p>
+
+<p>{{ payment.tx_ref }}</p>
+
+<br>
+
+<p><b>Amount:</b></p>
+
+<p>₦{{ payment.amount }}</p>
+
+</div>
+
+<a
+href="/dashboard"
+class="back">
+
+← Back to Dashboard
+
+</a>
+
+</div>
+
+</body>
+
+</html>

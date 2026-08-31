@@ -1,0 +1,341 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding-bottom: 80px;
+}
+
+.dashboard-page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+/* HEADER */
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.logo span {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0a8f63;
+}
+
+/* AVATAR MENU */
+.avatar-menu {
+    position: relative;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #e11d48;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.avatar span {
+    line-height: 1;
+}
+
+.dropdown {
+    display: none;
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    min-width: 160px;
+    overflow: hidden;
+    z-index: 50;
+}
+
+.dropdown.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    text-decoration: none;
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:active {
+    background: #f9fafb;
+}
+
+.dropdown-item.logout {
+    color: #dc2626;
+}
+
+/* BALANCE CARD */
+.balance-card {
+    background: linear-gradient(145deg, #0d9f6e 0%, #087a54 100%);
+    border-radius: 24px;
+    padding: 24px 20px;
+    color: white;
+    margin-bottom: 28px;
+    box-shadow: 0 14px 32px rgba(8, 122, 84, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.balance-card::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+
+.balance-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    position: relative;
+}
+
+.balance-label {
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    opacity: 0.85;
+    font-weight: 500;
+}
+
+.hide-btn {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+}
+
+.balance-amount {
+    font-size: 38px;
+    font-weight: 700;
+    margin-bottom: 22px;
+    letter-spacing: -1px;
+    position: relative;
+}
+
+.balance-actions {
+    display: flex;
+    gap: 12px;
+    position: relative;
+}
+
+.btn-withdraw,
+.btn-deposit {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 0;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.btn-withdraw {
+    background: #ffffff;
+    color: #0a8f63;
+}
+
+.btn-deposit {
+    background: rgba(255,255,255,0.18);
+    color: white;
+    border: 1.5px solid rgba(255,255,255,0.3);
+}
+
+/* QUICK SERVICES */
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: #1f2937;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.service-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    color: #1f2937;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.service-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.service-icon.green { background: #e6f7f0; }
+.service-icon.blue { background: #eff6ff; }
+.service-icon.sky { background: #e0f2fe; }
+
+.service-card span {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    display: block;
+    color: #1f2937;
+}
+
+/* ACCOUNT STATUS */
+.status-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.status-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-icon {
+    width: 44px;
+    height: 44px;
+    background: #fef3c7;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-left strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.status-left small {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.upgrade-btn {
+    background: #f3f4f6;
+    color: #4b5563;
+    padding: 9px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #9ca3af;
+    font-size: 11px;
+    font-weight: 500;
+    gap: 3px;
+    width: 25%;
+}
+
+.bottom-nav a .nav-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.bottom-nav a.active {
+    color: #0a8f63;
+}
+
+.bottom-nav a.active .nav-icon {
+    color: #0a8f63;
+}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Buy Plan - ZEBERO</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upgrade.css') }}">
+</head>
+<body>
+
+<div class="upgrade-page">
+
+    <!-- BALANCE -->
+    <div class="buy-balance">
+        <span>AVAILABLE BALANCE</span>
+        <h2>₦{{ "%.2f"|format(balance) }}</h2>
+    </div>
+
+    <h3 class="section-title">Available Plans</h3>
+
+    <div class="plan-card selected">
+
+        <div class="plan-top">
+            <h2>{{ plan.name }}</h2>
+        </div>
+
+        <div class="plan-details">
+            <div class="detail-row">
+                <span>Investment</span>
+                <strong>₦{{ "%.2f"|format(plan.price|float) }}</strong>
+            </div>
+            <div class="detail-row">
+                <span>Daily Profit</span>
+                <strong>₦{{ "%.2f"|format(plan.daily_profit|float) }}</strong>
+            </div>
+            <div class="detail-row">
+                <span>Duration</span>
+                <strong>{{ plan.duration }} Days</strong>
+            </div>
+        </div>
+
+        <!-- QUANTITY -->
+        <div class="quantity-section">
+            <div class="qty-header">
+                <span>Quantity:</span>
+                <span class="qty-value" id="qtyValue">1</span>
+            </div>
+            <input 
+                type="range" 
+                id="qtyRange" 
+                min="1" 
+                max="10" 
+                value="1"
+                oninput="updateQty()"
+            >
+        </div>
+
+        <div class="total-row">
+            Total: <strong id="totalAmount">₦{{ "%.2f"|format(plan.price|float) }}</strong>
+        </div>
+
+        <button class="buy-btn" onclick="buyNow()">
+            Buy Now
+        </button>
+
+    </div>
+
+    <a href="/upgrade" class="back-link">← Back to Plans</a>
+
+</div>
+
+<script>
+const price = {{ plan.price }};
+const planId = {{ plan.id }};
+
+function updateQty() {
+    const qty = document.getElementById("qtyRange").value;
+    document.getElementById("qtyValue").textContent = qty;
+    document.getElementById("totalAmount").textContent = "₦" + (price * qty).toFixed(2);
+}
+
+function buyNow() {
+    const qty = document.getElementById("qtyRange").value;
+    window.location = "/contract/buy?id=" + planId + "&quantity=" + qty;
+}
+</script>
+
+</body>
+</html>

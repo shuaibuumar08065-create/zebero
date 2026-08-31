@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Complete Profile - ZEBERO</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+</head>
+<body>
+
+<div class="onboard-page">
+
+    <div class="onboard-card">
+        <h1>Welcome to ZEBERO 👋</h1>
+        <p class="subtitle">Complete your profile to continue</p>
+
+        <form method="POST" action="/onboarding">
+
+            <div class="form-group">
+                <label>Your Name</label>
+                <input 
+                    type="text" 
+                    name="username" 
+                    value="{{ username or '' }}" 
+                    placeholder="Enter your name"
+                    required
+                    autofocus
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Referral Code <span class="optional">(Optional)</span></label>
+                <input 
+                    type="text" 
+                    name="referral_code" 
+                    value="{{ referral_code or '' }}" 
+                    placeholder="Enter referral code"
+                    style="text-transform: uppercase;"
+                >
+                <small>Leave empty if you don't have one</small>
+            </div>
+
+            {% if error %}
+            <div class="error-msg">{{ error }}</div>
+            {% endif %}
+
+            <button type="submit" class="submit-btn">
+                Continue
+            </button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ZEBERO - Task Manager</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f5f7fb;
+padding:20px;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+h2{
+margin-bottom:20px;
+color:#0c8b5d;
+}
+
+input,
+textarea,
+select{
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border:1px solid #ddd;
+border-radius:10px;
+font-size:15px;
+}
+
+textarea{
+min-height:120px;
+resize:vertical;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:10px;
+background:#0c8b5d;
+color:#fff;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#08744d;
+}
+
+.table-box{
+overflow-x:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+min-width:900px;
+}
+
+th{
+background:#0c8b5d;
+color:#fff;
+padding:12px;
+}
+
+td{
+padding:12px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+.status-active{
+color:#16a34a;
+font-weight:bold;
+}
+
+.status-inactive{
+color:#dc2626;
+font-weight:bold;
+}
+
+.edit-btn{
+background:#2563eb;
+color:#fff;
+padding:8px 12px;
+border-radius:8px;
+text-decoration:none;
+margin-right:6px;
+display:inline-block;
+}
+
+.delete-btn{
+background:#dc2626;
+color:#fff;
+padding:8px 12px;
+border-radius:8px;
+text-decoration:none;
+display:inline-block;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Create Task</h2>
+
+<form method="POST">
+
+<input
+type="text"
+name="title"
+placeholder="Task Title"
+required>
+
+<textarea
+name="description"
+placeholder="Task Description"
+required></textarea>
+
+<input
+type="number"
+step="0.01"
+name="reward"
+placeholder="Reward"
+required>
+
+<input
+type="url"
+name="task_url"
+placeholder="Task URL"
+required>
+
+<select
+name="task_type"
+id="task_type"
+onchange="toggleLevel()">
+
+<option value="normal">
+Normal Task
+</option>
+
+<option value="upgrade">
+Upgrade Task
+</option>
+
+</select>
+
+<div
+id="upgrade_box"
+style="display:none;">
+
+<select
+name="upgrade_level">
+
+<option value="">
+Select Upgrade Level
+</option>
+
+<option value="basic">
+🟢 Basic
+</option>
+
+<option value="silver">
+⚪ Silver
+</option>
+
+<option value="gold">
+🟡 Gold
+</option>
+
+<option value="platinum">
+💎 Platinum
+</option>
+
+<option value="diamond">
+🔷 Diamond
+</option>
+
+</select>
+
+</div>
+
+<select
+name="status">
+
+<option value="active">
+Active
+</option>
+
+<option value="inactive">
+Inactive
+</option>
+
+</select>
+
+<button type="submit">
+
+Create Task
+
+</button>
+
+</form>
+
+</div>
+
+<div class="card">
+
+<h2>All Tasks</h2>
+
+<div class="table-box">
+
+<table>
+
+<tr>
+
+<th>ID</th>
+
+<th>Title</th>
+
+<th>Reward</th>
+
+<th>Type</th>
+
+<th>Level</th>
+
+<th>Status</th>
+
+<th>Action</th>
+
+</tr>
+
+{% for task in tasks %}
+
+<tr>
+
+<td>{{ task.id }}</td>
+
+<td>{{ task.title }}</td>
+
+<td>₦{{ task.reward }}</td>
+
+<td>{{ task.type_name }}</td>
+
+<td>{{ task.level_name }}</td>
+
+<td>
+
+{% if task.status=="active" %}
+
+<span class="status-active">
+
+🟢 Active
+
+</span>
+
+{% else %}
+
+<span class="status-inactive">
+
+🔴 Inactive
+
+</span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+<a
+href="/admin/tasks/edit/{{ task.id }}"
+class="edit-btn">
+
+Edit
+
+</a>
+
+<a
+href="/admin/tasks/delete/{{ task.id }}"
+class="delete-btn"
+onclick="return confirm('Delete this task?')">
+
+Delete
+
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function toggleLevel(){
+
+const type=document.getElementById("task_type").value;
+
+const box=document.getElementById("upgrade_box");
+
+if(type==="upgrade"){
+
+box.style.display="block";
+
+}else{
+
+box.style.display="none";
+
+}
+
+}
+
+toggleLevel();
+
+</script>
+
+</body>
+
+</html>

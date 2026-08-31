@@ -1,0 +1,6 @@
+.env
+users.db
+*.db
+__pycache__/
+*.pyc
+ngrok-v3-stable-linux-arm.tgz

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZEBERO Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+body{background:#f0f2f5;min-height:100vh;padding-bottom:30px;}
+.header{height:64px;background:#0a8f63;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;position:sticky;top:0;z-index:10;}
+.header h2{font-size:17px;font-weight:700;}
+.logout-btn{text-decoration:none;background:#e53935;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;}
+.content{padding:16px;max-width:600px;margin:0 auto;}
+.welcome{background:#fff;padding:16px;border-radius:14px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.04);}
+.welcome h3{font-size:16px;margin-bottom:2px;}
+.welcome p{font-size:13px;color:#6b7280;}
+.section-title{font-size:13px;font-weight:600;color:#6b7280;margin:16px 0 10px;text-transform:uppercase;letter-spacing:.5px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);}
+.stat-card .label{font-size:11px;color:#9ca3af;margin-bottom:4px;}
+.stat-card .value{font-size:18px;font-weight:700;color:#1a1a1a;}
+.stat-card.green .value{color:#0a8f63;}
+.stat-card.full{grid-column:1 / -1;}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.menu-card{background:#fff;border-radius:14px;padding:18px 12px;text-align:center;text-decoration:none;color:#1a1a1a;box-shadow:0 2px 10px rgba(0,0,0,.04);}
+.menu-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px;}
+.menu-icon.green{background:#e6f7f0;}
+.menu-icon.blue{background:#eff6ff;}
+.menu-icon.purple{background:#f5f3ff;}
+.menu-card strong{display:block;font-size:13px;font-weight:600;}
+.menu-card small{display:block;font-size:11px;color:#9ca3af;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h2>ZEBERO Admin Panel</h2>
+    <a href="/admin/logout" class="logout-btn">Logout</a>
+</div>
+
+<div class="content">
+
+    <div class="welcome">
+        <h3>Welcome, {{ admin }}</h3>
+        <p>Platform overview</p>
+    </div>
+
+    <p class="section-title">Statistics</p>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">All Users</div>
+            <div class="value">{{ stats.all_users }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Today Users</div>
+            <div class="value">{{ stats.today_users }}</div>
+        </div>
+        <div class="stat-card green">
+            <div class="label">All Deposits</div>
+            <div class="value">₦{{ "%.0f"|format(stats.all_deposits) }}</div>
+        </div>
+        <div class="stat-card green">
+            <div class="label">Today Deposits</div>
+            <div class="value">₦{{ "%.0f"|format(stats.today_deposits) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">All Withdrawals</div>
+            <div class="value">₦{{ "%.0f"|format(stats.all_withdrawals) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Today Withdrawals</div>
+            <div class="value">₦{{ "%.0f"|format(stats.today_withdrawals) }}</div>
+        </div>
+        <div class="stat-card green full">
+            <div class="label">Flutterwave Balance</div>
+            <div class="value">₦{{ "%.2f"|format(stats.flw_balance) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">All Tasks</div>
+            <div class="value">{{ stats.all_tasks }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">All Click Ads</div>
+            <div class="value">{{ stats.all_clicks }}</div>
+        </div>
+    </div>
+
+    <p class="section-title">Menu</p>
+    <div class="menu-grid">
+        <a href="/admin/tasks" class="menu-card">
+            <div class="menu-icon green">📋</div>
+            <strong>Tasks</strong>
+            <small>Create & manage</small>
+        </a>
+        <a href="/admin/users" class="menu-card">
+            <div class="menu-icon blue">👥</div>
+            <strong>Users</strong>
+            <small>View all users</small>
+        </a>
+        <a href="/dashboard" class="menu-card">
+            <div class="menu-icon purple">🏠</div>
+            <strong>User App</strong>
+            <small>Go to website</small>
+        </a>
+    </div>
+
+</div>
+</body>
+</html>

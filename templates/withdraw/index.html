@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Withdraw - ZEBERO</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/withdraw.css') }}">
+</head>
+<body>
+
+<div class="withdraw-page">
+
+    <header class="withdraw-header">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">←</a>
+        <div class="header-title">
+            <h1>Withdraw</h1>
+            <p>Withdraw your referral commission</p>
+        </div>
+    </header>
+
+    <main class="withdraw-content">
+
+        <!-- BALANCE -->
+        <section class="balance-card">
+            <span class="balance-label">TOTAL BALANCE</span>
+            <strong class="balance-amount" id="available-balance">
+                ₦{{ "%.2f"|format((user['balance'] if user else 0) or 0) }}
+            </strong>
+            <p class="commission-note">
+                Withdrawable (Referral Commission):
+                <strong id="commission-balance">₦{{ "%.2f"|format(commission_balance or 0) }}</strong>
+            </p>
+        </section>
+
+        <!-- ACCOUNTS -->
+        <section class="accounts-section">
+
+            <div class="section-header">
+                <div>
+                    <h2>Withdrawal Account</h2>
+                    <p>Select a bank account for your withdrawal</p>
+                </div>
+                <a href="{{ url_for('withdraw.add_account') }}" class="add-account-btn">
+                    + Add Account
+                </a>
+            </div>
+
+            {% if accounts %}
+                <div class="accounts-list">
+                    {% for account in accounts %}
+                    <label class="account-card">
+                        <input
+                            type="radio"
+                            name="account_id"
+                            value="{{ account['id'] }}"
+                            {% if loop.first %}checked{% endif %}
+                        >
+                        <div class="account-icon">🏦</div>
+                        <div class="account-info">
+                            <strong class="bank-name">{{ account["bank_name"] }}</strong>
+                            <span class="account-name">{{ account["account_name"] }}</span>
+                            <span class="account-number">****{{ account["account_number"][-4:] }}</span>
+                        </div>
+                        <div class="radio-circle"></div>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="amount-section">
+                    <label>Amount to Withdraw</label>
+                    <div class="amount-input-wrapper">
+                        <span class="currency">₦</span>
+                        <input
+                            type="number"
+                            id="amount"
+                            placeholder="0.00"
+                            min="100"
+                            step="1"
+                            inputmode="decimal"
+                            max="{{ commission_balance or 0 }}"
+                        >
+                    </div>
+                    <small class="hint">
+                        Minimum ₦100 · Max withdrawable ₦{{ "%.2f"|format(commission_balance or 0) }}
+                    </small>
+                </div>
+
+                <div id="withdraw-message" class="message hidden"></div>
+
+                <button type="button" id="withdraw-btn" class="withdraw-btn" disabled>
+                    Withdraw Now
+                </button>
+
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🏦</div>
+                    <h3>No bank account yet</h3>
+                    <p>Add your Nigerian bank account to start withdrawing.</p>
+                    <a href="{{ url_for('withdraw.add_account') }}" class="withdraw-btn">
+                        Add Bank Account
+                    </a>
+                </div>
+            {% endif %}
+
+        </section>
+
+        <!-- HISTORY -->
+        <section class="history-section">
+            <h2>Withdrawal History</h2>
+
+            {% if history %}
+                <div class="history-list">
+                    {% for item in history %}
+                    <div class="history-item">
+                        <div class="history-left">
+                            <strong>₦{{ "%.2f"|format(item['amount']) }}</strong>
+                            <span class="history-bank">
+                                {{ item['bank_name'] }} · ****{{ item['account_number'][-4:] }}
+                            </span>
+                            <span class="history-date">
+                                {{ item['created_at'][:16] if item['created_at'] else '' }}
+                            </span>
+                        </div>
+                        <div class="history-right">
+                            {% if item['status'] == 'successful' %}
+                                <span class="badge success">Received</span>
+                            {% elif item['status'] == 'pending' %}
+                                <span class="badge pending">Pending</span>
+                            {% else %}
+                                <span class="badge failed">{{ item['status']|capitalize }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="history-empty">
+                    <p>No withdrawals yet</p>
+                </div>
+            {% endif %}
+        </section>
+
+    </main>
+</div>
+
+<script>
+const amountInput = document.getElementById("amount");
+const withdrawBtn = document.getElementById("withdraw-btn");
+const messageBox = document.getElementById("withdraw-message");
+const radios = document.querySelectorAll('input[name="account_id"]');
+const maxCommission = {{ commission_balance or 0 }};
+
+function getSelectedAccount() {
+    const selected = document.querySelector('input[name="account_id"]:checked');
+    return selected ? selected.value : null;
+}
+
+function showMessage(text, type = "error") {
+    if (!messageBox) return;
+    messageBox.textContent = text;
+    messageBox.className = "message " + type;
+}
+
+function checkForm() {
+    if (!withdrawBtn || !amountInput) return;
+
+    const amount = parseFloat(amountInput.value || 0);
+    const accountId = getSelectedAccount();
+
+    // Babu commission
+    if (maxCommission < 100) {
+        withdrawBtn.disabled = true;
+        return;
+    }
+
+    withdrawBtn.disabled = !(accountId && amount >= 100 && amount <= maxCommission);
+}
+
+if (amountInput) {
+    amountInput.addEventListener("input", function () {
+        const amount = parseFloat(amountInput.value || 0);
+
+        if (maxCommission < 100) {
+            showMessage("You have no referral commission. Invite friends who deposit to unlock withdrawals.");
+            checkForm();
+            return;
+        }
+
+        if (amount > maxCommission && amount > 0) {
+            showMessage("You can only withdraw ₦" + maxCommission.toFixed(2) + " (your referral commission).");
+        } else if (amount > 0 && amount < 100) {
+            showMessage("Minimum withdrawal is ₦100.");
+        } else {
+            messageBox.className = "message hidden";
+        }
+
+        checkForm();
+    });
+}
+
+radios.forEach(r => r.addEventListener("change", checkForm));
+
+if (withdrawBtn) {
+    // Idan babu commission, nuna message daga farko
+    if (maxCommission < 100) {
+        showMessage("You have no referral commission. Invite friends who deposit to unlock withdrawals.");
+        withdrawBtn.disabled = true;
+    }
+
+    withdrawBtn.addEventListener("click", async function () {
+        const amount = parseFloat(amountInput.value);
+        const accountId = getSelectedAccount();
+
+        if (maxCommission < 100) {
+            showMessage("You have no referral commission. Invite friends who deposit to unlock withdrawals.");
+            return;
+        }
+
+        if (!accountId) {
+            showMessage("Please select a bank account.");
+            return;
+        }
+
+        if (isNaN(amount) || amount < 100) {
+            showMessage("Minimum withdrawal is ₦100.");
+            return;
+        }
+
+        if (amount > maxCommission) {
+            showMessage("You can only withdraw ₦" + maxCommission.toFixed(2) + " (your referral commission).");
+            return;
+        }
+
+        withdrawBtn.disabled = true;
+        withdrawBtn.textContent = "Processing...";
+        messageBox.className = "message hidden";
+
+        try {
+            const response = await fetch("/withdraw/process", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    account_id: accountId,
+                    amount: amount
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+                showMessage(result.message || "Withdrawal successful!", "success");
+                if (result.new_balance !== undefined) {
+                    document.getElementById("available-balance").textContent =
+                        "₦" + parseFloat(result.new_balance).toFixed(2);
+                }
+                if (result.commission_balance !== undefined) {
+                    document.getElementById("commission-balance").textContent =
+                        "₦" + parseFloat(result.commission_balance).toFixed(2);
+                }
+                setTimeout(function () {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showMessage(result.message || "Withdrawal failed.");
+                withdrawBtn.disabled = false;
+                withdrawBtn.textContent = "Withdraw Now";
+            }
+        } catch (error) {
+            showMessage("Something went wrong. Please try again.");
+            withdrawBtn.disabled = false;
+            withdrawBtn.textContent = "Withdraw Now";
+        }
+    });
+}
+
+checkForm();
+</script>
+</body>
+</html>

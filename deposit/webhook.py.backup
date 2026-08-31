@@ -1,0 +1,637 @@
+import os
+import hmac
+import base64
+
+from flask import Blueprint, request, jsonify
+from dotenv import load_dotenv
+
+from deposit.flutterwave import verify_payment
+from deposit.models import get_deposit, complete_deposit
+
+
+# =========================================================
+# ENVIRONMENT
+# =========================================================
+
+load_dotenv()
+
+
+# =========================================================
+# BLUEPRINT
+# =========================================================
+
+deposit_webhook_bp = Blueprint(
+    "deposit_webhook",
+    __name__,
+)
+
+
+# =========================================================
+# VERIFY FLUTTERWAVE WEBHOOK SIGNATURE
+# =========================================================
+
+def verify_webhook_signature():
+
+    secret_hash = os.getenv("FLW_SECRET_HASH")
+
+    if not secret_hash:
+        print("WARNING: FLW_SECRET_HASH is missing.")
+        return False
+
+    # -----------------------------------------------------
+    # New Flutterwave signature
+    # -----------------------------------------------------
+
+    signature = request.headers.get(
+        "flutterwave-signature"
+    )
+
+    if signature:
+
+        raw_body = request.get_data()
+
+        expected = hmac.new(
+            secret_hash.encode("utf-8"),
+            raw_body,
+            hashlib.sha256,
+        ).digest()
+
+        expected_signature = base64.b64encode(
+            expected
+        ).decode("utf-8")
+
+        return hmac.compare_digest(
+            expected_signature,
+            signature,
+        )
+
+    # -----------------------------------------------------
+    # Older Flutterwave signature
+    # -----------------------------------------------------
+
+    old_signature = request.headers.get(
+        "verif-hash"
+    )
+
+    if old_signature:
+
+        return hmac.compare_digest(
+            old_signature,
+            secret_hash,
+        )
+
+    return False
+
+
+# =========================================================
+# FLUTTERWAVE WEBHOOK
+# =========================================================
+
+@deposit_webhook_bp.route(
+    "/flutterwave/webhook",
+    methods=["POST"],
+)
+def flutterwave_webhook():
+
+    print("\n====================================")
+    print("FLUTTERWAVE WEBHOOK RECEIVED")
+    print("====================================")
+
+    # -----------------------------------------------------
+    # Verify signature
+    # -----------------------------------------------------
+
+    if not verify_webhook_signature():
+
+        print(
+            "Invalid Flutterwave webhook signature."
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Invalid signature.",
+        }), 401
+
+    # -----------------------------------------------------
+    # Read JSON
+    # -----------------------------------------------------
+
+    payload = request.get_json(
+        silent=True
+    ) or {}
+
+    print("Webhook payload:")
+    print(payload)
+
+    if not isinstance(payload, dict):
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Event
+    # -----------------------------------------------------
+
+    event = str(
+        payload.get("event")
+        or payload.get("type")
+        or ""
+    ).lower()
+
+    print(
+        f"Webhook event: {event}"
+    )
+
+    # -----------------------------------------------------
+    # Only process completed charges
+    # -----------------------------------------------------
+
+    if event not in (
+        "charge.completed",
+        "charge.completed.v2",
+    ):
+
+        print(
+            f"Ignoring event: {event}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Webhook data
+    # -----------------------------------------------------
+
+    data = payload.get(
+        "data",
+        {}
+    )
+
+    if not isinstance(data, dict):
+
+        print(
+            "Webhook data is invalid."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Payment status
+    # -----------------------------------------------------
+
+    status = str(
+        data.get(
+            "status",
+            ""
+        )
+    ).lower()
+
+    print(
+        f"Webhook payment status: {status}"
+    )
+
+    if status not in (
+        "successful",
+        "succeeded",
+    ):
+
+        print(
+            f"Payment is not successful: {status}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Transaction information
+    # -----------------------------------------------------
+
+    transaction_id = data.get(
+        "id"
+    )
+
+    tx_ref = data.get(
+        "tx_ref"
+    )
+
+    flw_ref = data.get(
+        "flw_ref"
+    )
+
+    webhook_amount = data.get(
+        "amount"
+    )
+
+    currency = str(
+        data.get(
+            "currency",
+            ""
+        )
+    ).upper()
+
+    print(
+        f"TX REF: {tx_ref}"
+    )
+
+    print(
+        f"FLW REF: {flw_ref}"
+    )
+
+    print(
+        f"Transaction ID: {transaction_id}"
+    )
+
+    print(
+        f"Amount: {webhook_amount}"
+    )
+
+    print(
+        f"Currency: {currency}"
+    )
+
+    # -----------------------------------------------------
+    # Required values
+    # -----------------------------------------------------
+
+    if not tx_ref:
+
+        print(
+            "Missing tx_ref."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    if not transaction_id:
+
+        print(
+            "Missing transaction ID."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Find local deposit
+    # -----------------------------------------------------
+
+    deposit = get_deposit(
+        tx_ref
+    )
+
+    if not deposit:
+
+        print(
+            f"Deposit not found: {tx_ref}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Already completed
+    # -----------------------------------------------------
+
+    if deposit["status"] == "successful":
+
+        print(
+            "Deposit already completed."
+        )
+
+        return jsonify({
+            "success": True,
+            "already_completed": True,
+        }), 200
+
+    # -----------------------------------------------------
+    # Deposit must be pending
+    # -----------------------------------------------------
+
+    if deposit["status"] != "pending":
+
+        print(
+            "Deposit is not pending:"
+        )
+
+        print(
+            deposit["status"]
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Currency validation
+    # -----------------------------------------------------
+
+    if currency != "NGN":
+
+        print(
+            f"Invalid currency: {currency}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Local amount
+    # -----------------------------------------------------
+
+    try:
+
+        local_amount = float(
+            deposit["amount"]
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        print(
+            "Invalid local deposit amount."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Webhook amount
+    # -----------------------------------------------------
+
+    try:
+
+        flutterwave_amount = float(
+            webhook_amount
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        print(
+            "Invalid webhook amount."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    if flutterwave_amount < local_amount:
+
+        print(
+            "Webhook amount mismatch."
+        )
+
+        print(
+            f"Expected: {local_amount}"
+        )
+
+        print(
+            f"Received: {flutterwave_amount}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # =====================================================
+    # VERIFY TRANSACTION DIRECTLY WITH FLUTTERWAVE
+    # =====================================================
+
+    print(
+        "Verifying transaction with Flutterwave..."
+    )
+
+    verification = verify_payment(
+        transaction_id
+    )
+
+    print(
+        "Flutterwave verification:"
+    )
+
+    print(
+        verification
+    )
+
+    if not isinstance(
+        verification,
+        dict
+    ):
+
+        print(
+            "Invalid verification response."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    if verification.get(
+        "status"
+    ) != "success":
+
+        print(
+            "Transaction verification failed."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Verified data
+    # -----------------------------------------------------
+
+    verified_data = verification.get(
+        "data",
+        {}
+    )
+
+    if not isinstance(
+        verified_data,
+        dict
+    ):
+
+        print(
+            "Invalid verified transaction data."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    verified_status = str(
+        verified_data.get(
+            "status",
+            ""
+        )
+    ).lower()
+
+    verified_tx_ref = verified_data.get(
+        "tx_ref"
+    )
+
+    verified_currency = str(
+        verified_data.get(
+            "currency",
+            ""
+        )
+    ).upper()
+
+    try:
+
+        verified_amount = float(
+            verified_data.get(
+                "amount",
+                0
+            )
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        verified_amount = 0
+
+    # -----------------------------------------------------
+    # Verified status
+    # -----------------------------------------------------
+
+    if verified_status not in (
+        "successful",
+        "succeeded",
+    ):
+
+        print(
+            "Verified payment is not successful:"
+        )
+
+        print(
+            verified_status
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # TX REF validation
+    # -----------------------------------------------------
+
+    if verified_tx_ref != tx_ref:
+
+        print(
+            "Transaction reference mismatch."
+        )
+
+        print(
+            f"Local: {tx_ref}"
+        )
+
+        print(
+            f"Flutterwave: {verified_tx_ref}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Currency validation
+    # -----------------------------------------------------
+
+    if verified_currency != "NGN":
+
+        print(
+            "Verified currency mismatch."
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # -----------------------------------------------------
+    # Amount validation
+    # -----------------------------------------------------
+
+    if verified_amount < local_amount:
+
+        print(
+            "Verified amount is too small."
+        )
+
+        print(
+            f"Expected: {local_amount}"
+        )
+
+        print(
+            f"Verified: {verified_amount}"
+        )
+
+        return jsonify({
+            "success": True
+        }), 200
+
+    # =====================================================
+    # COMPLETE DEPOSIT
+    # =====================================================
+
+    print(
+        "Payment verified successfully."
+    )
+
+    print(
+        "Completing deposit..."
+    )
+
+    result = complete_deposit(
+        tx_ref=tx_ref,
+        flw_ref=flw_ref,
+    )
+
+    print(
+        "DEPOSIT RESULT:"
+    )
+
+    print(
+        result
+    )
+
+    print(
+        "====================================\n"
+    )
+
+    # -----------------------------------------------------
+    # Always acknowledge valid webhook
+    # -----------------------------------------------------
+
+    return jsonify({
+
+        "success": True,
+
+        "deposit_processed": result.get(
+            "success",
+            False
+        ),
+
+        "already_completed": result.get(
+            "already_completed",
+            False
+        ),
+
+    }), 200

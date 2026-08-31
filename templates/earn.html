@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Earn - ZEBERO</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/earn.css') }}">
+</head>
+<body>
+
+<div class="earn-page">
+
+    <!-- HEADER -->
+    <div class="earn-header">
+        <h1>Earn</h1>
+        <div class="balance-badge">
+            Balance: ₦{{ "%.0f"|format(session['user'].get('balance', 0)|float) }}
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <a href="/earn?type=normal" class="tab {% if task_type == 'normal' %}active{% endif %}">
+            Tasks
+        </a>
+        <a href="/earn?type=premium" class="tab {% if task_type == 'premium' %}active{% endif %}">
+            Premium
+        </a>
+    </div>
+
+    <!-- TASKS LIST -->
+    <div class="tasks-list">
+
+        {% if tasks %}
+            {% for task in tasks %}
+            <div class="task-card">
+
+                <div class="task-left">
+                    <div class="task-icon">
+                        {% if "twitter" in task.title|lower or "follow" in task.title|lower %}
+                            🐦
+                        {% elif "telegram" in task.title|lower or "join" in task.title|lower %}
+                            📢
+                        {% elif "youtube" in task.title|lower or "subscribe" in task.title|lower %}
+                            ▶️
+                        {% else %}
+                            💰
+                        {% endif %}
+                    </div>
+
+                    <div class="task-info">
+                        <h3>{{ task.title }}</h3>
+                        <div class="task-reward">
+                            🪙 +₦{{ "%.2f"|format(task.reward|float) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-right">
+
+                    {% if task.verification_status == "claimed" %}
+                        <span class="status-claimed">✓ Claimed</span>
+
+                    {% elif task.verification_status == "approved" %}
+                        <a href="/task/claim?id={{ task.id }}" 
+                           class="btn-claim"
+                           id="claim-btn-{{ task.id }}"
+                           data-created="{{ task.created_at }}"
+                           style="display:none;">
+                            Claim
+                        </a>
+                        <span class="status-waiting" id="countdown-{{ task.id }}">
+                            5s
+                        </span>
+
+                    {% elif task.verification_status == "pending" %}
+                        <span class="status-pending">Pending</span>
+
+                    {% else %}
+                        <a href="/verification/{{ task.id }}" class="btn-start">
+                            Start
+                        </a>
+                    {% endif %}
+
+                </div>
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No tasks available right now.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<!-- BOTTOM NAV (same as Dashboard) -->
+<nav class="bottom-nav">
+    <a href="/dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3L4 9v12h5v-7h6v7h5V9l-8-6z"/>
+        </svg>
+        <span>Home</span>
+    </a>
+
+    <a href="/earn" class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 7H3c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 12H3V9h18v10zm-9-7c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+        </svg>
+        <span>Earn</span>
+    </a>
+
+    <a href="/referral">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+        </svg>
+        <span>Referral</span>
+    </a>
+
+    <a href="/upgrade">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.3 7.2-6.3-4.8-6.3 4.8 2.3-7.2-6-4.8h7.6z"/>
+        </svg>
+        <span>Premium</span>
+    </a>
+</nav>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const WAIT_SECONDS = 5;
+
+    document.querySelectorAll("[id^='claim-btn-']").forEach(function (btn) {
+        const taskId = btn.id.replace("claim-btn-", "");
+        const createdAt = btn.dataset.created;
+        const countdownEl = document.getElementById("countdown-" + taskId);
+
+        if (!createdAt || createdAt === "None") {
+            btn.style.display = "inline-flex";
+            if (countdownEl) countdownEl.style.display = "none";
+            return;
+        }
+
+        const createdTime = new Date(createdAt).getTime();
+        let remaining = WAIT_SECONDS - Math.floor((Date.now() - createdTime) / 1000);
+
+        if (remaining <= 0) {
+            btn.style.display = "inline-flex";
+            if (countdownEl) countdownEl.style.display = "none";
+            return;
+        }
+
+        countdownEl.textContent = remaining + "s";
+
+        const timer = setInterval(function () {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(timer);
+                countdownEl.style.display = "none";
+                btn.style.display = "inline-flex";
+            } else {
+                countdownEl.textContent = remaining + "s";
+            }
+        }, 1000);
+    });
+});
+</script>
+<script>
+history.pushState(null, "", location.href);
+window.onpopstate = function () {
+    window.location.href = "/dashboard";
+};
+</script>
+
+</body>
+</html>

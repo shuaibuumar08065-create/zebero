@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Task Verification</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f5f5f5;
+    padding:20px;
+    margin:0;
+}
+
+.card{
+    max-width:600px;
+    margin:auto;
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+h2{
+    color:#0c8b5d;
+    margin-bottom:15px;
+}
+
+.description{
+    margin:12px 0;
+    font-size:16px;
+    line-height:1.7;
+    color:#444;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    word-break:break-word;
+}
+
+.reward{
+    font-size:22px;
+    font-weight:bold;
+    color:#16a34a;
+    margin:15px 0;
+}
+
+.note{
+    background:#fff8dc;
+    padding:12px;
+    border-left:4px solid orange;
+    margin:15px 0;
+    line-height:1.6;
+}
+
+.btn{
+    display:block;
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:none;
+    border-radius:8px;
+    text-decoration:none;
+    text-align:center;
+    background:#0c8b5d;
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+    box-sizing:border-box;
+}
+
+input[type=file]{
+    width:100%;
+    margin-top:15px;
+    margin-bottom:15px;
+}
+
+.preview{
+    display:none;
+    width:100%;
+    margin-top:15px;
+    border-radius:10px;
+    border:2px solid #ddd;
+    max-height:400px;
+    object-fit:contain;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>{{ task.title }}</h2>
+
+<p class="description">
+{{ task.description }}
+</p>
+
+<p class="reward">
+Reward: ₦{{ task.reward }}
+</p>
+
+<div class="note">
+⚠️ Complete the task first, then upload a clear screenshot as proof before submitting.
+</div>
+
+<a
+class="btn"
+href="{{ task.task_url }}"
+target="_blank">
+Open Task
+</a>
+
+<form
+action="/verification/{{ task.id }}/submit"
+method="POST"
+enctype="multipart/form-data">
+
+<input
+id="screenshot"
+type="file"
+name="screenshot"
+accept="image/*"
+required>
+
+<img
+id="preview"
+class="preview"
+alt="Screenshot Preview">
+
+<button
+class="btn"
+type="submit">
+Submit Verification
+</button>
+
+</form>
+
+</div>
+
+<script>
+
+const input = document.getElementById("screenshot");
+const preview = document.getElementById("preview");
+
+input.addEventListener("change", function(){
+
+    const file = this.files[0];
+
+    if(!file){
+        preview.style.display = "none";
+        preview.src = "";
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+        preview.src = e.target.result;
+        preview.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+
+});
+
+</script>
+
+</body>
+
+</html>

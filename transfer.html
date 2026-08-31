@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Complete Deposit - ZEBERO</title>
+
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/deposit.css') }}"
+    >
+
+
+    <style>
+
+        .transfer-page {
+
+            min-height: 100vh;
+
+            background: #f5f7fb;
+
+            padding: 24px 16px;
+
+        }
+
+
+        .transfer-card {
+
+            max-width: 520px;
+
+            margin: auto;
+
+            background: white;
+
+            border-radius: 24px;
+
+            padding: 28px 20px;
+
+            box-shadow:
+                0 10px 35px
+                rgba(0,0,0,.07);
+
+        }
+
+
+        .transfer-header {
+
+            text-align: center;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .bank-icon {
+
+            width: 70px;
+
+            height: 70px;
+
+            margin: auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 20px;
+
+            background: #e8f8f1;
+
+            font-size: 32px;
+
+        }
+
+
+        .transfer-header h1 {
+
+            margin-top: 18px;
+
+            font-size: 26px;
+
+        }
+
+
+        .transfer-header p {
+
+            margin-top: 8px;
+
+            color: #687386;
+
+            line-height: 1.5;
+
+        }
+
+
+        .amount-box {
+
+            margin-top: 20px;
+
+            padding: 24px;
+
+            text-align: center;
+
+            border-radius: 18px;
+
+            background: #e8f8f1;
+
+        }
+
+
+        .amount-label {
+
+            color: #687386;
+
+            font-size: 14px;
+
+        }
+
+
+        .amount-value {
+
+            margin-top: 8px;
+
+            color: #008f5a;
+
+            font-size: 34px;
+
+            font-weight: 800;
+
+        }
+
+
+        .info-box {
+
+            margin-top: 15px;
+
+            padding: 18px;
+
+            border-radius: 16px;
+
+            background: #f7f9fc;
+
+        }
+
+
+        .info-label {
+
+            color: #7a8495;
+
+            font-size: 13px;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .info-value {
+
+            color: #172033;
+
+            font-size: 18px;
+
+            font-weight: 700;
+
+            line-height: 1.4;
+
+            word-break: break-word;
+
+        }
+
+
+        .account-row {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 10px;
+
+        }
+
+
+        .copy-button {
+
+            border: none;
+
+            background: #008f5a;
+
+            color: white;
+
+            padding: 12px 17px;
+
+            border-radius: 12px;
+
+            font-weight: 700;
+
+        }
+
+
+        .timer-box {
+
+            margin-top: 20px;
+
+            padding: 18px;
+
+            border-radius: 16px;
+
+            text-align: center;
+
+            background: #fff8e7;
+
+        }
+
+
+        .timer-label {
+
+            color: #806b38;
+
+            font-size: 13px;
+
+        }
+
+
+        #timer {
+
+            margin-top: 5px;
+
+            color: #bd7b00;
+
+            font-size: 30px;
+
+            font-weight: 800;
+
+        }
+
+
+        .checking {
+
+            margin-top: 20px;
+
+            padding: 18px;
+
+            border-radius: 16px;
+
+            background: #f1faf6;
+
+            text-align: center;
+
+        }
+
+
+        .loader {
+
+            width: 28px;
+
+            height: 28px;
+
+            margin: 0 auto 10px;
+
+            border: 3px solid #ccefe0;
+
+            border-top-color: #008f5a;
+
+            border-radius: 50%;
+
+            animation:
+                spin .8s linear infinite;
+
+        }
+
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+
+        }
+
+
+        .success-box {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 22px;
+
+            border-radius: 16px;
+
+            background: #e8f8f1;
+
+            color: #008f5a;
+
+            text-align: center;
+
+        }
+
+
+        .success-icon {
+
+            font-size: 45px;
+
+        }
+
+
+        .expired-box {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 22px;
+
+            border-radius: 16px;
+
+            background: #fff0f0;
+
+            color: #c62828;
+
+            text-align: center;
+
+        }
+
+
+        .dashboard-button {
+
+            display: block;
+
+            margin-top: 18px;
+
+            padding: 14px;
+
+            border-radius: 13px;
+
+            background: #008f5a;
+
+            color: white;
+
+            text-decoration: none;
+
+            text-align: center;
+
+            font-weight: 700;
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="transfer-page">
+
+
+    <div class="transfer-card">
+
+
+        <div class="transfer-header">
+
+            <div class="bank-icon">
+                🏦
+            </div>
+
+
+            <h1>
+                Complete Your Deposit
+            </h1>
+
+
+            <p>
+                Transfer the exact amount
+                to the account below.
+            </p>
+
+        </div>
+
+
+        <!-- Amount -->
+
+        <div class="amount-box">
+
+            <div class="amount-label">
+                Amount to Transfer
+            </div>
+
+            <div class="amount-value">
+
+                ₦{{ "%.2f"|format(amount|float) }}
+
+            </div>
+
+        </div>
+
+
+        <!-- Bank -->
+
+        <div class="info-box">
+
+            <div class="info-label">
+                Bank Name
+            </div>
+
+            <div class="info-value">
+
+                {{ bank_name }}
+
+            </div>
+
+        </div>
+
+
+        <!-- Account -->
+
+        <div class="info-box">
+
+            <div class="info-label">
+                Account Number
+            </div>
+
+
+            <div class="account-row">
+
+                <div
+                    class="info-value"
+                    id="accountNumber"
+                >
+
+                    {{ account_number }}
+
+                </div>
+
+
+                <button
+                    class="copy-button"
+                    onclick="copyAccount()"
+                >
+
+                    Copy
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Name -->
+
+        <div class="info-box">
+
+            <div class="info-label">
+                Account Name / Transfer Note
+            </div>
+
+
+            <div class="info-value">
+
+                ZEBERO
+
+            </div>
+
+        </div>
+
+
+        <!-- Timer -->
+
+        <div class="timer-box">
+
+            <div class="timer-label">
+
+                Complete payment within
+
+            </div>
+
+
+            <div id="timer">
+
+                10:00
+
+            </div>
+
+        </div>
+
+
+        <!-- Checking -->
+
+        <div
+            class="checking"
+            id="checkingBox"
+        >
+
+            <div class="loader"></div>
+
+            <strong>
+                Checking payment...
+            </strong>
+
+            <p
+                style="
+                    margin-top:7px;
+                    color:#687386;
+                    font-size:13px;
+                "
+            >
+
+                This page will update
+                automatically when your
+                payment is received.
+
+            </p>
+
+        </div>
+
+
+        <!-- Success -->
+
+        <div
+            class="success-box"
+            id="successBox"
+        >
+
+            <div class="success-icon">
+                ✓
+            </div>
+
+
+            <h2>
+                Payment Successful
+            </h2>
+
+
+            <p
+                style="margin-top:8px"
+            >
+
+                Your wallet has been credited successfully.
+
+            </p>
+
+
+            <a
+                class="dashboard-button"
+                href="{{ url_for('dashboard') }}"
+            >
+
+                Go to Dashboard
+
+            </a>
+
+        </div>
+
+
+        <!-- Expired -->
+
+        <div
+            class="expired-box"
+            id="expiredBox"
+        >
+
+            <div
+                style="font-size:42px"
+            >
+                ⏰
+            </div>
+
+
+            <h2>
+                Deposit Expired
+            </h2>
+
+
+            <p
+                style="margin-top:8px"
+            >
+
+                The 10-minute payment window
+                has expired.
+
+            </p>
+
+
+            <a
+                class="dashboard-button"
+                href="{{ url_for('dashboard') }}"
+            >
+
+                Back to Dashboard
+
+            </a>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<script>
+
+const txRef = {{ tx_ref|tojson }};
+
+const expiresAt =
+    new Date(
+        {{ expires_at|tojson }}
+    );
+
+
+let finished = false;
+
+
+/* =========================================
+   COPY ACCOUNT
+========================================= */
+
+function copyAccount() {
+
+    const account =
+        document.getElementById(
+            "accountNumber"
+        ).innerText.trim();
+
+
+    navigator.clipboard
+        .writeText(account)
+        .then(() => {
+
+            alert(
+                "Account number copied"
+            );
+
+        });
+
+}
+
+
+/* =========================================
+   TIMER
+========================================= */
+
+function updateTimer() {
+
+    if (finished) {
+        return;
+    }
+
+
+    const now =
+        new Date();
+
+
+    let seconds =
+        Math.floor(
+            (expiresAt - now) / 1000
+        );
+
+
+    if (seconds <= 0) {
+
+        document.getElementById(
+            "timer"
+        ).innerText = "00:00";
+
+
+        showExpired();
+
+        return;
+
+    }
+
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+
+    seconds =
+        seconds % 60;
+
+
+    document.getElementById(
+        "timer"
+    ).innerText =
+
+        String(minutes)
+            .padStart(2, "0")
+
+        + ":"
+
+        +
+
+        String(seconds)
+            .padStart(2, "0");
+
+}
+
+
+setInterval(
+    updateTimer,
+    1000
+);
+
+
+updateTimer();
+
+
+/* =========================================
+   CHECK PAYMENT
+========================================= */
+
+async function checkPayment() {
+
+    if (finished) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/deposit/status/"
+                + encodeURIComponent(txRef),
+
+                {
+                    method: "GET",
+
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Deposit status:",
+            data.status
+        );
+
+
+        /* SUCCESS */
+
+        if (
+            data.status ===
+            "successful"
+        ) {
+
+            showSuccess();
+
+            return;
+
+        }
+
+
+        /* EXPIRED */
+
+        if (
+            data.status ===
+            "expired"
+        ) {
+
+            showExpired();
+
+            return;
+
+        }
+
+
+        /* CANCELLED */
+
+        if (
+            data.status ===
+            "cancelled"
+        ) {
+
+            showExpired();
+
+            return;
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Payment check error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   SUCCESS
+========================================= */
+
+function showSuccess() {
+
+    finished = true;
+
+
+    document.getElementById(
+        "checkingBox"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "expiredBox"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "successBox"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "timer"
+    ).innerText = "PAID";
+
+
+    setTimeout(
+        () => {
+
+            window.location.href =
+                "{{ url_for('dashboard') }}";
+
+        },
+
+        3000
+    );
+
+}
+
+
+/* =========================================
+   EXPIRED
+========================================= */
+
+function showExpired() {
+
+    if (finished) {
+        return;
+    }
+
+
+    finished = true;
+
+
+    document.getElementById(
+        "checkingBox"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "successBox"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "expiredBox"
+    ).style.display = "block";
+
+}
+
+
+/* =========================================
+   POLLING
+========================================= */
+
+checkPayment();
+
+
+const paymentChecker =
+    setInterval(
+        checkPayment,
+        3000
+    );
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#0a8f63">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ZEBERO">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZEBERO Login</title>
+    <link rel="stylesheet" href="/static/css/login.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">
+        <h1>ZEBERO</h1>
+    </div>
+
+    <div class="card">
+
+        <h2>Welcome Back 👋</h2>
+
+        <p>
+            Login to your ZEBERO account
+            securely with Google
+        </p>
+
+        <a href="/auth/google" class="google-btn">
+            <span>G</span>
+            Continue with Google
+        </a>
+
+        <div class="footer">
+            Fast • Secure • Trusted
+        </div>
+
+    </div>
+
+</div>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js").catch(function () {});
+}
+</script>
+
+</body>
+</html>

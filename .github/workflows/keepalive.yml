@@ -1,0 +1,16 @@
+name: ZEBERO Keep Alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping ZEBERO
+        run: |
+          curl -fsS --max-time 30 https://zebero.com.ng/ > /dev/null
+          echo "ZEBERO ping OK"

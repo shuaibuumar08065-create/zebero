@@ -7,53 +7,119 @@ def init_db():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
+    # ==========================================
+    # USERS
+    # ==========================================
+
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        google_id TEXT UNIQUE,
-        username TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        picture TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            google_id TEXT UNIQUE,
+            username TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            picture TEXT,
+            referred_by TEXT,
+            balance REAL DEFAULT 0,
+            referral_code TEXT UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # ------------------------------------------
+    # MIGRATION: add missing users columns
+    # ------------------------------------------
+
+    cursor.execute("PRAGMA table_info(users)")
+    user_columns = {
+        row[1]
+        for row in cursor.fetchall()
+    }
+
+    if "referred_by" not in user_columns:
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN referred_by TEXT
+        """)
+
+    if "balance" not in user_columns:
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN balance REAL DEFAULT 0
+        """)
+
+    if "referral_code" not in user_columns:
+        cursor.execute("""
+            ALTER TABLE users
+            ADD COLUMN referral_code TEXT
+        """)
+
+    # ==========================================
+    # ADMINS
+    # ==========================================
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
     """)
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS admins (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+        INSERT OR IGNORE INTO admins
+        (id, username, password)
+        VALUES
+        (1, 'admin', 'admin123')
     """)
 
-    cursor.execute("""
-    INSERT OR IGNORE INTO admins (id, username, password)
-    VALUES (1, 'admin', 'admin123')
-    """)
+    # ==========================================
+    # TASKS
+    # ==========================================
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        reward REAL NOT NULL,
-        task_url TEXT NOT NULL,
-        task_type TEXT NOT NULL,
-        status TEXT DEFAULT 'Active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            reward REAL NOT NULL,
+            task_url TEXT NOT NULL,
+            task_type TEXT NOT NULL,
+            upgrade_level INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
     """)
 
+    # ------------------------------------------
+    # MIGRATION: add missing task columns
+    # ------------------------------------------
+
+    cursor.execute("PRAGMA table_info(tasks)")
+    task_columns = {
+        row[1]
+        for row in cursor.fetchall()
+    }
+
+    if "upgrade_level" not in task_columns:
+        cursor.execute("""
+            ALTER TABLE tasks
+            ADD COLUMN upgrade_level INTEGER DEFAULT 1
+        """)
+
+    # ==========================================
+    # DAILY REWARDS
+    # ==========================================
+
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS daily_rewards (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER UNIQUE NOT NULL,
-        current_day INTEGER DEFAULT 1,
-        last_claim_date TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id)
-    )
+        CREATE TABLE IF NOT EXISTS daily_rewards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            current_day INTEGER DEFAULT 1,
+            last_claim_date TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
     """)
 
     conn.commit()
